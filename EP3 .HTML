@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EP3 FINAL INSPECTION REPORT</title>
+  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4faff; padding: 20px; }
+    h2 { text-align: center; background: #d9ecff; padding: 10px; border: 2px solid #0047ab; }
+    .form-section { margin-bottom: 20px; }
+    .form-section label { display: inline-block; margin: 5px 10px; font-weight: bold; }
+    .form-section input, .form-section select, textarea { padding: 5px; margin-right: 20px; font-size: 14px; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10px; }
+    th, td {
+      border: 1px solid #999; text-align: center; padding: 4px; font-size: 12px;
+      word-wrap: break-word; overflow-wrap: break-word; vertical-align: middle;
+    }
+    th { background: #d9f1ff; }
+    th:nth-child(1), td:nth-child(1) { width: 5%; }
+    th:nth-child(2), td:nth-child(2) { width: 20%; }
+    th:nth-child(3), td:nth-child(3), th:nth-child(4), td:nth-child(4) { width: 7%; }
+    th:nth-child(5), td:nth-child(5) { width: 12%; }
+    th:nth-child(6), th:nth-child(7), th:nth-child(8),
+    th:nth-child(9), th:nth-child(10), th:nth-child(11),
+    td:nth-child(6), td:nth-child(7), td:nth-child(8),
+    td:nth-child(9), td:nth-child(10), td:nth-child(11) { width: 10.5%; }
+    th:nth-child(12), td:nth-child(12) { width: 10.5%; }
+    input.obs-input, select { width: 100%; padding: 3px; font-size: 12px; box-sizing: border-box; }
+    .invalid { background-color: #ffd6d6; }
+    textarea { width: 100%; height: 100px; margin-top: 20px; resize: vertical; }
+    .form-buttons { text-align: center; margin-top: 20px; }
+    .form-buttons button {
+      padding: 12px 24px;
+      margin: 5px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .submit-btn { background-color: #007bff; color: white; }
+    .reset-btn { background-color: #ffc107; color: black; }
+    .cancel-btn { background-color: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+  <h2>EP3 FINAL INSPECTION REPORT</h2>
+  <form id="inspectionForm">
+    <div class="form-section">
+      <label>Inspector:
+        <input list="inspectors" id="inspector" required placeholder="Type or select name">
+        <datalist id="inspectors">
+          <option value="Musaliya"><option value="Nainar"><option value="Kuzhathaivelu">
+        </datalist>
+      </label>
+      <label>Date:
+        <input type="date" id="date" required>
+      </label>
+      <label>Time:
+        <input type="time" id="time" required>
+      </label>
+      <label>Shift:
+        <select id="shift" required>
+          <option value="">Select Shift</option>
+          <option>A</option>
+          <option>B</option>
+          <option>C</option>
+          <option>General Shift</option>
+        </select>
+      </label>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Sl.No</th>
+          <th>Characteristics</th>
+          <th>Min</th>
+          <th>Max</th>
+          <th>Method</th>
+          <th><input type="text" placeholder="Stack 1" class="obs-input" id="stack1" style="text-align:center" /></th>
+          <th><input type="text" placeholder="Stack 2" class="obs-input" id="stack2" style="text-align:center" /></th>
+          <th><input type="text" placeholder="Stack 3" class="obs-input" id="stack3" style="text-align:center" /></th>
+          <th><input type="text" placeholder="Stack 4" class="obs-input" id="stack4" style="text-align:center" /></th>
+          <th><input type="text" placeholder="Stack 5" class="obs-input" id="stack5" style="text-align:center" /></th>
+          <th><input type="text" placeholder="Stack 6" class="obs-input" id="stack6" style="text-align:center" /></th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+
+    <div class="form-section">
+      <label for="remarks">Remarks:</label><br>
+      <textarea id="remarks" maxlength="50000" placeholder="Enter your remarks here (up to 50,000 characters)"></textarea>
+    </div>
+
+    <div class="form-section">
+      <label for="imageUpload">Upload Image (Max 12MB):</label>
+      <input type="file" id="imageUpload" accept="image/*">
+    </div>
+
+    <div class="form-buttons">
+      <button type="button" class="submit-btn" onclick="submitForm()">Submit</button>
+      <button type="button" class="reset-btn" onclick="resetForm()">Reset</button>
+      <button type="button" class="cancel-btn" onclick="cancelForm()">Cancel</button>
+
+    </div>
+    <script>
+  function cancelForm() {
+    if (confirm("Are you sure you want to cancel the form?")) {
+      if (window.opener != null) {
+        window.close(); // Works if opened via window.open()
+      } else {
+        location.reload(); // Fallback for direct tab access
+      }
+    }
+  }
+</script>
+
+
+    <div id="successMessage" style="text-align:center; color:green; font-weight:bold; margin-top:20px; display:none"></div>
+  </form>
+  
+  
+  <script>
+    const characteristics = [
+      { no:1,name:"Straightness of pole packet - Concave",min:0,max:0.1,method:"Vernier Scale with Feeler gauge" },
+      { no:1,name:"Straightness of pole packet - Convex",min:0,max:0.5,method:"Vernier Scale with Feeler gauge" },
+      { no:2,name:"Perpendicularity",min:0,max:2,method:"Try Square with Feeler gauge" },
+      { no:3,name:"Parallelism",min:0,max:2,method:"Vernier caliper" },
+      { no:4,name:"Profile of surface",fixed:"3D dimensions cannot be measured with conventional instruments" },
+      { no:5,name:"Length of core",min:729,max:732,method:"Measuring Tape / Snap Gauge" },
+      { no:6,name:"Hole to Hole distance",dropdown:true,method:"Thread hole distance measuring gauge" },
+      { no:7,name:"Hole to Hole distance",dropdown:true,method:"Thread hole distance measuring gauge" },
+      { no:8,name:"Height of core (Centre)",min:223.45,max:223.65,method:"Digital caliper" },
+      { no:9,name:"Width 1 of core",min:99.95,max:100.30,method:"Digital caliper" },
+      { no:10,name:"Width 2 of core",min:97.95,max:98.30,method:"Digital caliper" },
+      { no:11,name:"Thread",dropdown:true,method:"Thread plug" },
+      { no:12,name:"Thread depth (Drill)",min:41.5,max:42.1,method:"Digital caliper" },
+      { no:13,name:"Thread length",min:32.5,max:35.5,method:"Stud with digital caliper" },
+      { no:14,name:"Hole Position",min:0,max:0.5,method:"Digital caliper" },
+      { no:15,name:"Symmetry",min:0,max:0.2,method:"Stud with digital caliper" },
+      { no:16,name:"Bottom Width",min:127.5,max:128.5,method:"Digital caliper" },
+      { no:17,name:"Top Width",min:169.5,max:170.5,method:"Digital caliper" },
+      { no:18,name:"Top Overall width",fixed:"Not able to inspect since this is imaginary dimension." },
+      { no:19,name:"Core height (from edge)",fixed:"Not able to inspect since this is imaginary dimension." },
+      { no:20,name:"Height",min:197.3,max:197.6,method:"Digital caliper" },
+      { no:21,name:"Distance for Ellipse top 1",fixed:"Not able to inspect since this is imaginary dimension." },
+      { no:22,name:"Distance for Ellipse top 2",fixed:"Not able to inspect since this is imaginary dimension." },
+      { no:23,name:"Distance (Side 1 & Side 2)",min:17.5,max:18.2,method:"Digital caliper" },
+      { no:24,name:"Primer DFT",min:20,max:80,method:"Coating tester" },
+      { no:25,name:"Cross hatch tape test acc. To DIN EN ISO 2409",fixed:"As per MK00052 - Accepted." },
+      { no:26,name:"Welding",dropdown:true,method:"As per drawing" },
+      { no:27,name:"Primer coating - Side 01 (Bottom side)",dropdown:true,method:"Visual" },
+      { no:28,name:"Primer coating - Side 02 (Top side)",dropdown:true,method:"Visual" },
+      { no:29,name:"Primer coating - Side 03 (Left side)",dropdown:true,method:"Visual" },
+      { no:30,name:"Primer coating - Side 04 (Right side)",dropdown:true,method:"Visual" },
+      { no:31,name:"Primer coating - Side 05 (Front side)",dropdown:true,method:"Visual" },
+      { no:32,name:"Primer coating - Side 06 (Rear side)",dropdown:true,method:"Visual" },
+      { no:33,name:"Appearance",dropdown:true,method:"Visual" },
+      { no:34,name:"Appearance - Grinding marks",dropdown:true,method:"Visual" }
+    ];
+
+    const tbody = document.getElementById("tableBody");
+
+    function validateField(input, min, max) {
+      const row = input.closest("tr");
+      const resultCell = row.querySelector(".result-cell");
+      let valid = true;
+      row.querySelectorAll("input.obs-input").forEach(inp => {
+        const cell = inp.parentElement;
+        const val = parseFloat(inp.value);
+        if (!isNaN(val) && val >= min && val <= max) {
+          inp.classList.remove("invalid");
+          cell.classList.remove("invalid");
+        } else {
+          inp.classList.add("invalid");
+          cell.classList.add("invalid");
+          valid = false;
+        }
+      });
+      resultCell.textContent = valid ? "OK" : "NOT OK";
+    }
+
+    function validateDropdown(select) {
+      const row = select.closest("tr");
+      const resultCell = row.querySelector(".result-cell");
+      let valid = true;
+      row.querySelectorAll("select").forEach(sel => {
+        const cell = sel.parentElement;
+        if (sel.value === "OK") {
+          sel.classList.remove("invalid");
+          cell.classList.remove("invalid");
+        } else {
+          sel.classList.add("invalid");
+          cell.classList.add("invalid");
+          valid = false;
+        }
+      });
+      resultCell.textContent = valid ? "OK" : "NOT OK";
+    }
+
+    window.onload = () => {
+      // populate table
+      characteristics.forEach(c => {
+        const row = document.createElement("tr");
+        if (c.fixed) {
+          row.innerHTML = `
+            <td>${c.no}</td>
+            <td colspan="10" style="text-align:left;font-weight:bold">${c.name}: ${c.fixed}</td>
+            <td class="result-cell">-</td>
+          `;
+        } else {
+          const cells = [...Array(6)].map(() => {
+            return `<td>${
+              c.dropdown
+                ? `<select onchange="validateDropdown(this)" class="obs-input"><option>OK</option><option>NOK</option></select>`
+                : `<input type="text" class="obs-input" oninput="validateField(this, ${c.min}, ${c.max})">`
+            }</td>`;
+          }).join("");
+          row.innerHTML = `
+            <td>${c.no}</td>
+            <td>${c.name}</td>
+            <td>${c.min !== undefined ? c.min : "-"}</td>
+<td>${c.max !== undefined ? c.max : "-"}</td>
+
+            <td>${c.method}</td>
+            ${cells}
+            <td class="result-cell">-</td>
+          `;
+        }
+        tbody.appendChild(row);
+      });
+
+      // autofill date/time
+      const now = new Date();
+      document.getElementById("date").valueAsDate = now;
+      document.getElementById("time").value = now.toTimeString().slice(0,5);
+    };
+  </script>
+  <script>
+function submitForm() {
+  const inspector = document.getElementById("inspector").value.trim();
+  const shift = document.getElementById("shift").value;
+  const stackInputs = [
+    document.getElementById("stack1"),
+    document.getElementById("stack2"),
+    document.getElementById("stack3"),
+    document.getElementById("stack4"),
+    document.getElementById("stack5"),
+    document.getElementById("stack6")
+  ];
+  const message = document.getElementById("successMessage");
+  const imageInput = document.getElementById("imageUpload");
+
+  // Check all stack serial numbers are filled
+  let missingStacks = [];
+  stackInputs.forEach((input, index) => {
+    if (!input.value.trim()) {
+      missingStacks.push(`Stack ${index + 1}`);
+    }
+  });
+
+  if (!inspector || !shift) {
+    alert("Please fill in Inspector and Shift fields.");
+    return;
+  }
+
+  if (missingStacks.length > 0) {
+    alert(`Please enter Stack Serial Numbers for: ${missingStacks.join(', ')}`);
+    return;
+  }
+
+  // Check image size if selected
+  if (imageInput.files.length > 0) {
+    const fileSizeMB = imageInput.files[0].size / (1024 * 1024);
+    if (fileSizeMB > 12) {
+      alert("Uploaded image exceeds 12MB size limit.");
+      return;
+    }
+  }
+
+  // Confirm and success message
+  if (confirm("Are you sure you want to submit the inspection report?")) {
+    message.textContent = `Report for Stack ${stackInputs.map(i => i.value).join(', ')} submitted successfully!`;
+    message.style.display = "block";
+
+    // Optional: Call Excel/PDF export functions here
+    // exportExcel(stackInputs[0].value);
+  }
+}
+</script>
+ <script>
+function submitForm() {
+  const inspector = document.getElementById("inspector").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const shift = document.getElementById("shift").value;
+  const remarks = document.getElementById("remarks").value;
+  const stackInputs = ["stack1", "stack2", "stack3", "stack4", "stack5", "stack6"].map(id => document.getElementById(id).value);
+  const imageInput = document.getElementById("imageUpload");
+  const imageFile = imageInput.files[0];
+// Check required fields
+if (!inspector || !date || !time || !shift) {
+  alert("Please fill all required fields.");
+  return;
+}
+
+// Check stack inputs are not empty
+if (stackInputs.some(s => !s.trim())) {
+  alert("Please enter all 6 stack serial numbers.");
+  return;
+}
+
+// Check for duplicates
+const uniqueStacks = new Set(stackInputs.map(s => s.trim()));
+if (uniqueStacks.size !== 6) {
+  alert("Duplicate stack serial numbers detected. Please enter 6 unique stack numbers.");
+  return;
+}
+
+
+  if (imageFile && imageFile.size > 12 * 1024 * 1024) {
+    alert("Image exceeds 12MB size limit.");
+    return;
+  }
+
+  const imageReader = new FileReader();
+  imageReader.onload = function (e) {
+    const base64Image = imageFile ? e.target.result : null;
+    exportExcel(inspector, date, time, shift, stackInputs, remarks, base64Image);
+    exportPDF(inspector, date, time, shift, stackInputs, remarks, base64Image);
+    document.getElementById("successMessage").textContent = `Report for Stack ${stackInputs.join(", ")} submitted successfully!`;
+    document.getElementById("successMessage").style.display = "block";
+    resetForm(false);
+  };
+
+  if (imageFile) imageReader.readAsDataURL(imageFile);
+  else {
+    exportExcel(inspector, date, time, shift, stackInputs, remarks, null);
+    exportPDF(inspector, date, time, shift, stackInputs, remarks, null);
+    document.getElementById("successMessage").textContent = `Report for Stack ${stackInputs.join(", ")} submitted successfully!`;
+    document.getElementById("successMessage").style.display = "block";
+    resetForm(false);
+  }
+}
+
+function resetForm(full = true) {
+  const resetFields = ["remarks", "imageUpload", "stack1", "stack2", "stack3", "stack4", "stack5", "stack6"];
+  resetFields.forEach(id => document.getElementById(id).value = "");
+
+  document.getElementById("successMessage").style.display = "none";
+
+  // Clear observation fields & results
+  document.querySelectorAll(".obs-input").forEach(input => input.value = "");
+  document.querySelectorAll(".result-cell").forEach(cell => cell.textContent = "-");
+
+  // If full reset, clear inspector, shift, date, and time too
+  if (full) {
+    document.getElementById("inspector").value = "";
+    document.getElementById("shift").value = "";
+
+    const now = new Date();
+    document.getElementById("date").valueAsDate = now;
+    document.getElementById("time").value = now.toTimeString().slice(0,5);
+  }
+}
+
+
+async function exportExcel(inspector, date, time, shift, stacks, remarks, base64Image) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("EP3 Report");
+
+  // Format time to AM/PM
+  function formatAMPM(timeStr) {
+    const [hourStr, min] = timeStr.split(":");
+    let hour = parseInt(hourStr);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour}:${min} ${ampm}`;
+  }
+
+  // Title
+  sheet.mergeCells("A1", "L1");
+  sheet.getCell("A1").value = "EP3 FINAL INSPECTION REPORT";
+  sheet.getCell("A1").alignment = { horizontal: "center" };
+  sheet.getCell("A1").font = { bold: true, size: 14, color: { argb: 'FF0047AB' } };
+
+  // Header Info
+  const info = [
+    ["Inspector", inspector],
+    ["Date", date],
+    ["Time", formatAMPM(time)],
+    ["Shift", shift],
+    ["Stack Serial Numbers", ...stacks],
+  ];
+  info.forEach((row, i) => {
+    sheet.addRow(row);
+  });
+
+  sheet.addRow([]);
+
+  // Table Header
+  const header = ["Sl.No", "Characteristic", "Min", "Max", "Method", ...stacks, "Result"];
+  const headerRow = sheet.addRow(header);
+  headerRow.eachCell(cell => {
+    cell.font = { bold: true };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: "FFD9ECFF" }
+    };
+    cell.border = {
+      top: { style: "thin" },
+      left: { style: "thin" },
+      bottom: { style: "thin" },
+      right: { style: "thin" }
+    };
+    cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+  });
+
+  // Column widths
+  const colWidths = [6, 40, 8, 8, 25, ...Array(stacks.length).fill(12), 12];
+  colWidths.forEach((w, i) => sheet.getColumn(i + 1).width = w);
+
+  // Table Rows
+  const rows = document.querySelectorAll("#tableBody tr");
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("td");
+    if (cells.length === 12) {
+      const rowData = [
+        cells[0].textContent,
+        cells[1].textContent,
+        cells[2].textContent || "-",
+        cells[3].textContent || "-",
+        cells[4].textContent,
+        ...Array.from({ length: 6 }, (_, i) =>
+          cells[5 + i].querySelector("input, select")?.value || ""
+        ),
+        cells[11].textContent
+      ];
+      const newRow = sheet.addRow(rowData);
+      newRow.eachCell(cell => {
+        cell.border = {
+          top: { style: "thin" },
+          left: { style: "thin" },
+          bottom: { style: "thin" },
+          right: { style: "thin" }
+        };
+        cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
+      });
+    } else {
+      const txt = cells[1]?.textContent || "";
+      const sl = cells[0]?.textContent || "";
+      sheet.addRow([`Sl.No ${sl}: ${txt}`]);
+    }
+  });
+
+  // Remarks & Image Status
+  sheet.addRow([]);
+  sheet.addRow(["Remarks", remarks]);
+  sheet.addRow(["Image File", base64Image ? "Attached" : "Not uploaded"]);
+
+  // Embed image if available
+  if (base64Image) {
+    const imageId = workbook.addImage({
+      base64: base64Image,
+      extension: "jpeg"
+    });
+    sheet.addRow([]);
+    sheet.addImage(imageId, {
+      tl: { col: 1, row: sheet.rowCount + 1 },
+      ext: { width: 500, height: 300 }
+    });
+  }
+
+  // Save file
+  const fileName = `${stacks.join("_")}_${date}_EP3_Report.xlsx`;
+  const buffer = await workbook.xlsx.writeBuffer();
+  saveAs(new Blob([buffer]), fileName);
+}
+
+function exportPDF(inspector, date, time, shift, stacks, remarks, base64Image) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 10;
+  let startY = 35;
+  const lineHeight = 6;
+
+  const headers = [
+    "S.No", "Characteristic", "Min", "Max", "Method",
+    ...stacks, "Result"
+  ];
+
+  const colWidths = [10, 40, 10, 10, 28, 14, 14, 14, 14, 14, 14, 16]; // Total should be ≤ 190mm
+
+  // Format time to AM/PM
+  function formatAMPM(timeStr) {
+    const [hourStr, min] = timeStr.split(":");
+    let hour = parseInt(hourStr);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour}:${min} ${ampm}`;
+  }
+
+  // Title
+  doc.setFontSize(14);
+  doc.setTextColor(0, 0, 128);
+  doc.text("EP3 FINAL INSPECTION REPORT", pageWidth / 2, 12, { align: "center" });
+
+  // Header Info
+  doc.setFontSize(10);
+  doc.setTextColor(0);
+  doc.text(`Inspector: ${inspector}`, margin, 20);
+  doc.text(`Date: ${date}`, 70, 20);
+  doc.text(`Time: ${formatAMPM(time)}`, 120, 20);
+  doc.text(`Shift: ${shift}`, 160, 20);
+  doc.text(`Stacks: ${stacks.join(", ")}`, margin, 26);
+
+  // Table Headers
+  let x = margin;
+  doc.setFontSize(9);
+  doc.setTextColor(0);
+  doc.setDrawColor(0);
+  headers.forEach((h, i) => {
+    doc.setFillColor(200, 230, 255);
+    doc.rect(x, startY, colWidths[i], lineHeight, 'FD');
+    const wrappedHeader = doc.splitTextToSize(h, colWidths[i] - 2);
+    wrappedHeader.forEach((line, j) => {
+      doc.text(line, x + 1.5, startY + 4 + j * 3);
+    });
+    x += colWidths[i];
+  });
+
+  startY += lineHeight;
+  const rows = document.querySelectorAll("#tableBody tr");
+  let notes = [];
+
+  rows.forEach((row) => {
+    const cells = row.querySelectorAll("td");
+    x = margin;
+    let rowHeight = lineHeight;
+
+    if (cells.length === 12) {
+      const values = [
+        cells[0].textContent.trim(),
+        cells[1].textContent.trim(),
+        cells[2].textContent.trim() || "-",
+        cells[3].textContent.trim() || "-",
+        cells[4].textContent.trim(),
+        ...Array.from({ length: 6 }, (_, i) =>
+          cells[5 + i].querySelector("input, select")?.value || ""
+        ),
+        cells[11].textContent.trim()
+      ];
+
+      const wrapped = values.map((val, i) =>
+        doc.splitTextToSize(val, colWidths[i] - 2)
+      );
+      rowHeight = Math.max(...wrapped.map(w => w.length)) * 5;
+
+      if (startY + rowHeight > 270) {
+        doc.addPage();
+        startY = 10;
+        x = margin;
+        headers.forEach((h, i) => {
+          doc.setFillColor(200, 230, 255);
+          doc.rect(x, startY, colWidths[i], lineHeight, 'FD');
+          const wrap = doc.splitTextToSize(h, colWidths[i] - 2);
+          wrap.forEach((line, j) => {
+            doc.text(line, x + 1.5, startY + 4 + j * 3);
+          });
+          x += colWidths[i];
+        });
+        startY += lineHeight;
+      }
+
+      x = margin;
+      wrapped.forEach((lines, i) => {
+        doc.rect(x, startY, colWidths[i], rowHeight);
+        lines.forEach((txt, j) => {
+          doc.text(txt, x + 1.5, startY + 4 + j * 5);
+        });
+        x += colWidths[i];
+      });
+
+      startY += rowHeight;
+    } else {
+      const noteText = cells[1]?.textContent.trim();
+      if (noteText) {
+        const sl = cells[0]?.textContent.trim();
+        notes.push(`• Sl.No ${sl}: ${noteText}`);
+      }
+    }
+  });
+
+  // Remarks
+  startY += 10;
+  if (startY > 270) {
+    doc.addPage();
+    startY = 10;
+  }
+  doc.setFont(undefined, "bold");
+  doc.text("Remarks:", margin, startY);
+  doc.setFont(undefined, "normal");
+  const wrappedRemarks = doc.splitTextToSize(remarks, pageWidth - margin * 2);
+  doc.text(wrappedRemarks, margin, startY + 6);
+  startY += wrappedRemarks.length * 5 + 10;
+
+  // Notes
+  if (notes.length) {
+    doc.setFont(undefined, "bold");
+    doc.text("Notes", margin, startY);
+    doc.setFont(undefined, "normal");
+    startY += 6;
+    const wrappedNotes = doc.splitTextToSize(notes.join("\n"), pageWidth - margin * 2);
+    doc.text(wrappedNotes, margin, startY);
+    startY += wrappedNotes.length * 5;
+  }
+
+  // Image on new page
+  if (base64Image) {
+    doc.addPage();
+    doc.setFont(undefined, "bold");
+    doc.text("Attached Image:", margin, 10);
+    doc.addImage(base64Image, "JPEG", margin, 15, 180, 130);
+  }
+
+  // Page Numbers
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, 290, { align: "right" });
+    doc.setTextColor(0);
+  }
+
+  doc.save(`${stacks.join("_")}_${date}_EP3_Report.pdf`);
+}
+
+
+</script>
+
+</body>
+</html>
